@@ -23,7 +23,8 @@ var layers = {
   UBER_XL: new L.LayerGroup(),
   SELECT: new L.LayerGroup(),
   BLACK: new L.LayerGroup(),
-  BLACK_SUV: new L.LayerGroup()
+  BLACK_SUV: new L.LayerGroup(),
+  Places: new L.LayerGroup()
 };
 
 // Create the map with our layers
@@ -36,10 +37,10 @@ var map = L.map("map", {
     layers.UBER_XL,
     layers.SELECT,
     layers.BLACK,
-    layers.BLACK_SUV
+    layers.BLACK_SUV,
+    layers.Places
   ]
 });
-
 
 // Add our 'lightmap' tile layer to the map
 streetmap.addTo(map);
@@ -52,7 +53,8 @@ var overlays = {
   "Uber XL": layers.UBER_XL,
   "Select": layers.SELECT,
   "Black": layers.BLACK,
-  "Black SUV": layers.BLACK_SUV
+  "Black SUV": layers.BLACK_SUV,
+  "Places": layers.Places    
 };
 
 // Create a control for our layers, add our overlay layers to it
@@ -73,7 +75,7 @@ info.addTo(map);
 
 // Initialize an object containing icons for each layer group
 var icons = {
-  UBER_POOL: L.ExtraMarkers.icon({
+   UBER_POOL: L.ExtraMarkers.icon({
     icon: "ion-android-car",
     iconColor: "white",
     markerColor: "yellow",
@@ -108,6 +110,13 @@ var icons = {
     iconColor: "white",
     markerColor: "green",
     shape: "circle"
+  }),
+  Places: L.ExtraMarkers.icon({
+    icon: "ion-android-car",
+    shadowUrl: "",
+    iconColor: "white",
+    markerColor: "violet",
+    shape: "star"
   })
 };
 
@@ -116,20 +125,40 @@ var centerMarker = L.marker([33.7762, -84.3895], {
               });
 centerMarker.addTo(map);
 
+currentKey = "Select";
+currentTime = "8:00";
+showPlaces = false;
+
 d3.select('#select-key').on('change', function(a) {
   // Change the current key and call the function to update the colors.
   currentKey = d3.select(this).property('value');
-  /*Object.keys(obj).forEach(function(key,index) {
-   // key: the name of the object key
-   // index: the ordinal position of the key within the object
-  });*/
   Object.keys(layers).forEach(d=> {layers[d].clearLayers()});
-  renderMap(currentKey);
-
+  renderMap(currentKey, currentTime, showPlaces);
 });
 
-function renderMap(key) {
+d3.select('#select-time').on('change', function(a) {
+  // Change the current key and call the function to update the colors.
+  currentTime = d3.select(this).property('value');
+  Object.keys(layers).forEach(d=> {layers[d].clearLayers()});
+  renderMap(currentKey, currentTime, showPlaces);
+});
+
+d3.select('#select-places').on('change', function(a) {
+  // Change the current key and call the function to update the colors.
+  if ( d3.select(this).property('value') == "showplaces") {
+      showPlaces = true;
+  } else {
+      showPlaces = false;
+  }
+  //dontshowplaces
+  Object.keys(layers).forEach(d=> {layers[d].clearLayers()});
+  renderMap(currentKey, currentTime, showPlaces);
+});
+
+function renderMap(key, time, showPlaces) {
   // When the first API call is complete, perform another call to the Citi Bike Station Status endpoint
+    console.log(showPlaces);
+    
   d3.json("/data", function(response) {
   //d3.json(data, function(response) {
       console.log(response);
@@ -140,16 +169,16 @@ function renderMap(key) {
       UBER_XL: 0,
       SELECT: 0,
       BLACK: 0,
-      BLACK_SUV: 0
+      BLACK_SUV: 0,
+      Places: 0,
     };
-
 
     // Initialize a stationStatusCode, which will be used as a key to access the appropriate layers, icons, and station count for layer group
     var stationStatusCode;
 
     // Loop through the stations (they're the same size and have partially matching data)
     for (var i = 0; i < response.length; i++) {
-        if (response[i][0] == key){
+        if ((response[i][0] == key)& (response[i][8] == time)){
         // Create a new station object with properties of both station objects
         var lat = response[i][1];
         var lon = response[i][2];
@@ -157,14 +186,11 @@ function renderMap(key) {
         // If a station is listed but not installed, it's coming soon
         // Check for location property
         if (lat) {
-
           // Add a new marker to the cluster group and bind a pop-up
-
-
               stationStatusCode = response[i][4]
               if (stationStatusCode == "Black SUV") {
                   stationStatusCode = "BLACK_SUV";
-                  linecolor = "black";
+                  linecolor = "blue-dark";
                   rotationAngle = -90;
                   lat = lat - 0;
                   lon = lon - 0.0008
@@ -178,43 +204,44 @@ function renderMap(key) {
               }
               if (stationStatusCode == "Select") {
                   stationStatusCode = "SELECT";
-                  linecolor = "black";
+                  linecolor = "green";
                   rotationAngle = -20;
                   lat = lat + 0.0004;
                   lon = lon - 0.0004
               }
               if (stationStatusCode == "UberXL") {
                   stationStatusCode = "UBER_XL";
-                  linecolor = "black";
+                  linecolor = "orange";
                   rotationAngle = 20;
                   lat = lat + 0.0004;
                   lon = lon + 0.0004
               }
               if (stationStatusCode == "Black") {
                   stationStatusCode = "BLACK";
-                  linecolor = "black";
+                  linecolor = "red";
                   rotationAngle = 55;
                   lat = lat + 0.0002;
                   lon = lon + 0.0006
               }
               if (stationStatusCode == "UberX") {
                   stationStatusCode = "UBER_X";
-                  linecolor = "black";
+                  linecolor = "purple";
                   rotationAngle = 90;
                   lat = lat + 0;
                   lon = lon + 0.0008
               }
+            
               var newMarker = L.marker([lat, lon], {
                 icon: icons[stationStatusCode],
                   rotationAngle: rotationAngle
               });
-              console.log(stationStatusCode)
+              //console.log(stationStatusCode)
               // Add the new marker to the appropriate layer
               newMarker.addTo(layers[stationStatusCode]);
 
               // Bind a popup to the marker that will  display on click. This will be rendered as HTML
-              newMarker.bindPopup(response[i][0]+ "<br> Range: " + response[i][7]);
-
+              newMarker.bindPopup("<h2>" + response[i][0] + "</h2> <br> <h3> Range: " + response[i][7] + "</h3>");
+              
               var line = [
                   [33.7762, -84.3895],
                   [location[0], location[1]]
@@ -223,26 +250,52 @@ function renderMap(key) {
                   color: linecolor
                 }).bindPopup("<h1>" + "Uber From GA Tech To: "  + response[i][0] +"</h1> <br> <h2>Travel Time: " + (response[i][6])/60 + " minutes" + "</h2>");
               newLine.addTo(layers[stationStatusCode]);
-
-//"<h1>"+ response[i][0]+ "</h1> <br> <h2>Range: " + response[i][7]+"</h2>"
-
+              
               map.fitBounds(line, { padding: [100, 100] })
-
+         
         }
         }
   }
-
-
+      if (showPlaces) {
+          d3.json("/placesinfo", function(places){
+              console.log(key);
+              
+              if (key == "Select") {
+                  pkey = "GaTech"
+              } else {
+                  pkey = key
+              }
+              for (var j = 0; j < places.length; j++) {
+                  if (places[j][0] == pkey){
+                      //console.log(places[j][0]);
+                      stationStatusCode = "Places";
+                      var clat = places[j][3];
+                      var clon = places[j][4];
+                      var cname = places[j][5];
+                      var cvicinity = places[j][6];
+                      console.log(clat);
+                      var newMarker = L.marker([clat, clon], {
+                        icon: icons[stationStatusCode]
+                        });
+                      newMarker.addTo(layers[stationStatusCode]);
+                      newMarker.bindPopup("<h2 style=\"font-size: 25px\">"+cname + "</h2><br><h4> Address: " + cvicinity+"</h4>");
+                  }
+              }
+          })
+          //map.layers.append(layes.places)
+      }
+  
       // Update the station count
-
+      
       // Create a new marker with the appropriate icon and coordinates
-
-
 
     // Call the updateLegend function, which will... update the legend!
     //updateLegend(updatedAt, stationCount);
   });
+    //end of d3.json getting data
 };
+// Call the updateLegend function, which will... update the legend!
+    //updateLegend(updatedAt, stationCount);
 function updateLegend(time, stationCount) {
   document.querySelector(".legend").innerHTML = [
     "<p>Updated: " + moment.unix(time).format("h:mm:ss A") + "</p>",
@@ -274,7 +327,7 @@ d3.json("outfile.json", function(response) {
      str = ""
       for (var j = 0; j < response[i].value.length ; j++)   {
           str = str + "<h2>" + response[i].value[j].display_name + ":"+ response[i].value[j].estimate + "</h2> <hr>"
-      }
+      }  
       //  console.log(response[i].value.length)
       L.marker([location[0], location[1]])
         .bindPopup("<h1>" + response[i].place +"</h1> <hr>" + str ).addTo(map);
