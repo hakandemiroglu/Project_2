@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <style id="stndz-style"></style>
+	<title>Uber Prices</title>
+	<!--<link href={{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }} rel="stylesheet" media="screen">-->
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" rel="stylesheet">
+	<script async="" src="//www.google-analytics.com/analytics.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.js"></script>
+ 
+   <style type="text/css">/* Chart.js */
+    @-webkit-keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}@keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}.chartjs-render-monitor{-webkit-animation:chartjs-render-animation 0.001s;animation:chartjs-render-animation 0.001s;}</style>
+	<script type="text/javascript" src="static/js/Utils.js"></script>
+	<style>
+		canvas{
+			-moz-user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+		}
+		#chartjs-tooltip {
+			opacity: 1;
+			position: absolute;
+			background: rgba(0, 0, 0, .7);
+			color: white;
+			border-radius: 3px;
+			-webkit-transition: all .1s ease;
+			transition: all .1s ease;
+			pointer-events: none;
+			-webkit-transform: translate(-50%, 0);
+			transform: translate(-50%, 0);
+		}
+
+		.chartjs-tooltip-key {
+			display: inline-block;
+			width: 10px;
+			height: 10px;
+			margin-right: 10px;
+		}
+	</style>
+</head>
+
+   
+  
+  
+<body>
+    <header class="masthead bg-primary text-white text-center" style="background-color: #18bc9c!important; padding:10px">
+      <div class="container">
+    <div class="row">
+          <div class="col-sm-1">
+              <div class="text-center mt-4">
+              <a class="btn btn-xl btn-outline-light" href="/">
+                <i class="fas fa-download mr-2"></i>
+                Home
+              </a>
+            </div>
+          </div>
+          <div class="col-sm-1">
+              <div class="text-center mt-4">
+              <a class="btn btn-xl btn-outline-light" href="/map">
+                <i class="fas fa-download mr-2"></i>
+                Map
+              </a>
+            </div>
+          </div>
+           <div class="col-sm-4">
+            <h3 class="text-center">Uber Price Info and Closeby Places</h3>
+            </div>
+      
+       <div class="col-sm-3">
+       <h5> Places</h5>
+        <select id="select-key" >
+          <option value="very_close" selected="selected">less than 1.5 miles</option>
+          <option value="close">between 1.5 and 3 miles</option>
+          <option value="far">between 3 and 8 miles</option>
+          <option value="very_far">more than 8 miles</option>
+        </select>
+           </div>
+           <div class="col-sm-3">
+              <h5> Type of Ride</h5>
+               <select id="select-type" >
+          <option value="UberPool" selected="selected">UberPool</option>
+          <option value="UberX">UberX</option>
+          <option value="UberXL">UberXL</option>
+          <option value="Select">UberSelect</option>
+          <option value="Black">Black</option>
+          <option value="BlackSUV">BlackSUV</option>
+        </select>
+           </div>
+           <!--<div class="col-sm-2">
+              <h5>Show Closeby</h5>
+               <select id="select-places" > Show Closeby
+         <option value="Select" selected="selected">Please Select</option>
+          <option value="showplaces">Show Closeby Places</option>
+          <option value="dontshowplaces">Do not Show Closeby Places</option>
+        </select>
+           </div>-->
+      </div>
+       </div>
+</header>
+	<!--<div id="selection">
+	    <div class="row">
+        <h3 class="nine columns">Land use statistics map</h3>
+        <select id="select-key" class="three columns">
+          <option value="select" selected="selected">select</option>
+          <option value="very_close" selected="selected">very close</option>
+          <option value="close">close</option>
+          <option value="far">far</option>
+          <option value="very_far">very far</option>
+          
+        </select>
+      </div>
+      <div class="toolbar">
+			<button onclick="togglePropagate(this)" class="">Propagate</button>
+			<button onclick="toggleSmooth(this)" class="">Smooth</button>
+			<button onclick="randomize(this)">Randomize</button>
+		</div>
+	</div>-->
+<div class="wrapper" style="padding-left: 10%">
+
+
+
+	<div id="canvas-holder1" style="width:75%;">
+	<div class="chartjs-size-monitor" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;"><div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0"></div></div><div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;"><div style="position:absolute;width:200%;height:200%;left:0; top:0"></div></div></div>
+		<canvas id="chart" width="1054" height="527" class="chartjs-render-monitor" style="display: block; width: 1054px; height: 527px;"></canvas>
+	<div id="chartjs-tooltip" class="center" style="opacity: 0; left: 882.018px; top: 349.101px; font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: 12px; font-style: normal; padding: 6px;"><table><thead><tr><th>June</th></tr></thead><tbody><tr><td><span class="chartjs-tooltip-key" style="background:rgb(255, 61, 103); border-color:rgb(255, 61, 103); border-width: 2px"></span>My First dataset: -27</td></tr><tr><td><span class="chartjs-tooltip-key" style="background:rgb(5, 155, 255); border-color:rgb(5, 155, 255); border-width: 2px"></span>My Second dataset: 33</td></tr></tbody></table></div></div>
+	
+	</div>
+	<script>
+		Chart.defaults.global.pointHitDetectionRadius = 1;
+
+		var customTooltips = function(tooltip) {
+			// Tooltip Element
+			var tooltipEl = document.getElementById('chartjs-tooltip');
+
+			if (!tooltipEl) {
+				tooltipEl = document.createElement('div');
+				tooltipEl.id = 'chartjs-tooltip';
+				tooltipEl.innerHTML = '<table></table>';
+				this._chart.canvas.parentNode.appendChild(tooltipEl);
+			}
+
+			// Hide if no tooltip
+			if (tooltip.opacity === 0) {
+				tooltipEl.style.opacity = 0;
+				return;
+			}
+
+			// Set caret Position
+			tooltipEl.classList.remove('above', 'below', 'no-transform');
+			if (tooltip.yAlign) {
+				tooltipEl.classList.add(tooltip.yAlign);
+			} else {
+				tooltipEl.classList.add('no-transform');
+			}
+
+			function getBody(bodyItem) {
+				return bodyItem.lines;
+			}
+
+			// Set Text
+			if (tooltip.body) {
+				var titleLines = tooltip.title || [];
+				var bodyLines = tooltip.body.map(getBody);
+
+				var innerHtml = '<thead>';
+
+				titleLines.forEach(function(title) {
+					innerHtml += '<tr><th>' + title + '</th></tr>';
+				});
+				innerHtml += '</thead><tbody>';
+
+				bodyLines.forEach(function(body, i) {
+					var colors = tooltip.labelColors[i];
+					var style = 'background:' + colors.backgroundColor;
+					style += '; border-color:' + colors.borderColor;
+					style += '; border-width: 2px';
+					var span = '<span class="chartjs-tooltip-key" style="' + style + '"></span>';
+					innerHtml += '<tr><td>' + span + body + '</td></tr>';
+				});
+				innerHtml += '</tbody>';
+
+				var tableRoot = tooltipEl.querySelector('table');
+				tableRoot.innerHTML = innerHtml;
+			}
+
+			var positionY = this._chart.canvas.offsetTop;
+			var positionX = this._chart.canvas.offsetLeft;
+
+			// Display, position, and set styles for font
+			tooltipEl.style.opacity = 1;
+			tooltipEl.style.left = positionX + tooltip.caretX + 'px';
+			tooltipEl.style.top = positionY + tooltip.caretY + 'px';
+			tooltipEl.style.fontFamily = tooltip._bodyFontFamily;
+			tooltipEl.style.fontSize = tooltip.bodyFontSize + 'px';
+			tooltipEl.style.fontStyle = tooltip._bodyFontStyle;
+			tooltipEl.style.padding = tooltip.yPadding + 'px ' + tooltip.xPadding + 'px';
+		};
+        
+     var currentKey = "very_close";
+     var currentType = "UberPool";
+        
+     var places1 = ["{{places[0]}}","{{places[1]}}","{{places[2]}}","{{places[3]}}","{{places[4]}}"];
+        console.log(currentType);
+        if (currentKey == "very_close"){
+            var myplaces = ["{{places[0]}}","{{places[1]}}","{{places[2]}}","{{places[3]}}","{{places[4]}}"];
+        }
+        
+    function generateData(key,type) {
+        console.log(type)
+		var lineChartData = {
+			labels: [ {% for item in times %}
+                        "{{item}}",
+                        {% endfor %} ],
+			datasets: [{
+				label: "{{places[0]}}",
+				borderColor: window.chartColors.red,
+				pointBackgroundColor: window.chartColors.red,
+				fill: false,
+				data: [ {% for item in chartdata %}
+                       {% if item[0] == places[0] %}
+                        {% if item[6] == types[0] %}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ]
+			}, {
+				label: "{{places[1]}}",
+				borderColor: window.chartColors.blue,
+				pointBackgroundColor: window.chartColors.blue,
+				fill: false,
+				data:[ {% for item in chartdata %}
+                       {% if item[0] == places[1] %}
+                         {% if item[6] == types[0] %}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ]
+			}, {
+				label: "{{places[2]}}",
+				borderColor: window.chartColors.orange,
+				pointBackgroundColor: window.chartColors.orange,
+				fill: false,
+				data:[ {% for item in chartdata %}
+                       {% if item[0] == places[2] %}
+                         {% if item[6] == types[0]%}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ]
+			}, {
+				label: "{{places[3]}}",
+				borderColor: window.chartColors.green,
+				pointBackgroundColor: window.chartColors.green,
+				fill: false,
+				data:[ {% for item in chartdata %}
+                       {% if item[0] == places[3] %}
+                         {% if item[6] == types[0]%}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ]
+			}, {
+				label: "{{places[4]}}",
+				borderColor: window.chartColors.purple,
+				pointBackgroundColor: window.chartColors.purple,
+				fill: false,
+				data:[ {% for item in chartdata %}
+                       {% if item[0] == places[4] %}
+                         {% if item[6] == types[0]%}
+                            {{item[2]}},
+                                {% endif %}
+                       {% endif %}
+                            {% endfor %} ]
+			}
+                
+                ]
+		};
+                                 console.log(lineChartData.datasets[0].data)
+        return lineChartData
+    };
+
+		window.onload = function() {
+			var chartEl = document.getElementById('chart');
+			window.myLine = new Chart(chartEl, {
+				type: 'line',
+				data: generateData(currentKey, currentType),
+				options: {
+					title: {
+						display: true,
+						text: 'Chart.js Line Chart - Custom Tooltips'
+					},
+					tooltips: {
+						enabled: false,
+						mode: 'index',
+						position: 'nearest',
+						custom: customTooltips
+					}
+				}
+			});
+		};
+        
+
+		document.getElementById('select-key').addEventListener('change', function() {
+			for (var i = 0, len = datapoints.length; i < len; ++i) {
+				datapoints[i] = Math.random() < 0.05 ? NaN : randomScalingFactor();
+			}
+			window.myLine.update();
+		});                         
+                                 
+                                 
+       
+        
+	</script>
+
+
+
+</body>
+ 
+ 
+ 
+
+
+
+
+  <!-- <body>
+   
+    <!-- chart div 
+   
+    <div id="chart"></div>
+    
+    <!-- D3 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
+
+  <!-- MomentJS 
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.1/moment.min.js"></script>
+
+  <!-- Leaflet JavaScript 
+  <script src="https://unpkg.com/leaflet@1.3.3/dist/leaflet.js"
+  integrity="sha512-tAGcCfR4Sc5ZP5ZoVz0quoZDYX5aCtEm/eu1KhSLj2c9eFrylXZknQYmxUssFaVJKvvc0dJQixhGjG2yXWiV9Q=="
+  crossorigin=""></script>
+
+  <!-- Icons 
+  <script src={{ url_for('static', filename='js/leaflet-extramarkers.js') }}></script>
+  <script src={{ url_for('static', filename='js/leaflet-rotatedmarkers.js') }}></script>
+  <script src={{ url_for('static', filename='js/Chart.bundle.min.js') }}></script>
+  <script src={{ url_for('static', filename='js/Chart.min.js') }}></script>
+  <!-- <script src="leaflet-extramarkers.js"></script> 
+
+  <!-- polyfill.io is library for using newer JavaScript features in older browers (such as Object.assign) 
+  <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+    
+    
+    <!-- API key 
+    <!-- <script type="text/javascript" src="static/js/config.js"></script> 
+      <!-- JS  
+   <script src={{ url_for('static', filename='js/logic.js') }}></script>
+    
+  </body> -->
+</html>
